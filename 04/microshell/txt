@@ -1,0 +1,50 @@
+Assignment name  : microshell
+Expected files   : *.c *.h
+Allowed functions: malloc, free, write, close, fork, waitpid, signal, kill, exit, chdir, execve, dup, dup2, pipe, strcmp, strncmp
+--------------------------------------------------------------------------------------
+
+Ecrire un programme qui aura ressemblera à un executeur de commande shell
+- La ligne de commande à executer sera passer en argument du programme
+- Les executables seront appelés avec un chemin relatif ou absolut mais votre programme ne devra pas construire de chemin (en utilisant la variable d environment PATH par exemple)
+- Votre programme doit implementer "|" et ";" comme dans bash
+	- Nous n'essaierons jamais un "|" immédiatement suivi ou précédé par rien ou un autre "|" ou un ";"
+- Votre programme doit implementer la commande "built-in" cd et seulement avec un chemin en argument (pas de '-' ou sans argument)
+	- si cd n'a pas le bon nombre d'argument votre programme devra afficher dans STDERR "error: cd: bad arguments" suivi d'un '\n'
+	- si cd a echoué votre programme devra afficher dans STDERR "error: cd: cannot change directory to path_to_change" suivi d'un '\n' avec path_to_change remplacer par l'argument à cd
+	- une commande cd ne sera jamais immédiatement précédée ou suivie par un "|"
+- Votre programme n'a pas à gerer les "wildcards" (*, ~ etc...)
+- Votre programme n'a pas à gerer les variables d'environment ($BLA ...)
+- Si un appel systeme, sauf execve et chdir, retourne une erreur votre programme devra immédiatement afficher dans STDERR "error: fatal" suivi d'un '\n' et sortir
+- Si execve echoue votre programme doit afficher dans STDERR "error: cannot execute executable_that_failed" suivi d'un '\n' en ayant remplacé executable_that_failed avec le chemin du programme qui n'a pu etre executé (ca devrait etre le premier argument de execve)
+- Votre programme devrait pouvoir accepter des centaines de "|" meme si la limite du nombre de "fichier ouvert" est inferieur à 30.
+
+Par exemple, la commande suivante doit marcher:
+$>./microshell /bin/ls "|" /usr/bin/grep microshell ";" /bin/echo i love my microshell
+microshell
+i love my microshell
+$>
+
+Conseils:
+N'oubliez pas de passer les variables d'environment à execve
+
+Conseils:
+Ne fuitez pas de file descriptor!
+
+- 将使用相对或绝对路径调用可执行文件，但您的程序不应构建路径（例如，使用环境 PATH 变量）
+- 你的程序必须实现“|”和 ”;”就像在 bash 中一样
+- 我们永远不会尝试“|”紧跟或前面没有或另一个“|”或一个“;”
+- 您的程序必须实现“内置” cd 命令，并且只能使用路径作为参数（无“-”或无参数）
+- 如果 cd 没有正确数量的参数，您的程序将必须在 STDERR 中显示“error: cd: bad arguments”，后跟一个 '\ n'
+- 如果 cd 失败，您的程序应该在 STDERR 中显示“错误：cd：无法将目录更改为 path_to_change”，后跟一个带有 path_to_change 的 '\ n' 替换为 cd 的参数
+- cd 命令永远不会紧跟在“|”之前或之后
+- 您的程序不必管理“通配符”（*、~等...）
+- 您的程序不必管理环境变量（$ BLA ...）
+- 如果除 execve 和 chdir 之外的系统调用返回错误，您的程序应立即在 STDERR 中显示“错误：致命”，后跟一个 '\ n' 并退出
+- 如果 execve 失败，您的程序必须在 STDERR 中显示“错误：无法执行 executable_that_failed”，后跟一个 '\ n' 用无法执行的程序的路径替换 executable_that_failed （这应该是 execve 的第一个参数）
+- 你的程序应该能够接受数百个“|”即使“打开文件”的数量限制小于 30。
+
+建议：
+不要忘记将环境变量传递给 execve
+
+建议：
+不要泄露文件描述符！
