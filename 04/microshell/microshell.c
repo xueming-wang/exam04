@@ -12,9 +12,9 @@
 #define FAT_E "error: fatal\n"
 #define EXE_E "error: cannot execute "
 
-#define PIPE 0
-#define MULTI 1
-#define NO_FLAG 2
+#define PIPE 1
+#define MULTI 2
+#define NO_FLAG 0
 
 #define ERROR 1
 #define SUCCESS 0
@@ -48,8 +48,10 @@ void	print_msg(char *msg1, char *msg2, int fd)
 	if (msg1)
 		ft_putstr_fd(msg1, fd);
 	if (msg2)
+    {
 		ft_putstr_fd(msg2, fd);
-    ft_putstr_fd("\n", fd);    
+        ft_putstr_fd("\n", fd);  
+    }  
 }
 int arg_len(char **s) //一段cmd的 args长度 echo 1 2 3 | ls 返回4 
 {
@@ -58,13 +60,15 @@ int arg_len(char **s) //一段cmd的 args长度 echo 1 2 3 | ls 返回4
      {
         if ((s[i][0] == '|' || s[i][0] == ';') && ft_strlen(s[i]) == 1) //如果碰到
         {
+            if (i == 0)  //???????????
+                i = 1;
             break;
         }
         i++;
      }
     return (i);
 }
-void free_agrs()
+void free_agrs(void)
 {
     int i = 0;
     while (microshell.args[i])
@@ -121,10 +125,14 @@ char* ft_strdup(char *s)
 
 void ft_cd (void)
 {
-    if (microshell.len != 2)  //只能有两位 比如 cd  /bin/ls
+    if (microshell.len != 2) {//只能有两位 比如 cd  /bin/ls
         print_msg(ARG_E, NULL, STDERR_FILENO);
-    if (chdir(microshell.args[1]) != 0)
+        return;
+    }
+    if (chdir(microshell.args[1]) == -1) { //没有打开
         print_msg(CD_E, NULL, STDERR_FILENO);
+        return;
+    }
 }
 
 void  _parser(char **av, int i)  //i 表示 第几个 arg 。 这个函数保存microshell.args. （一个commande直到结束或者看见|;) 确认 falg; 
@@ -134,6 +142,7 @@ void  _parser(char **av, int i)  //i 表示 第几个 arg 。 这个函数保存
     microshell.args = calloc(microshell.len + 1, sizeof(char *)); //malloc一个位置并且都赋予0
     if (!microshell.args)
         _exit_(FAT_E, NULL, STDERR_FILENO, ERROR);
+    
     int j = 0;
     while (j < microshell.len) //把一个arg 比如 “echo 1 3 4" 保存进args 直到遇到 ;或 |
     {
@@ -196,8 +205,14 @@ void _exec(char **av, char **env)
     {
         _parser(av, i); // 保存一段 cmd
         microshell.env = env;
-        fork_exec();
-        i = i + microshell.len;
+
+        if (!(microshell.args[0] && ft_strlen(microshell.args[0]) == 1 && microshell.args[0][0] == ';'))  //不是 ; 就能运行
+            fork_exec();
+        
+        if (microshell.flag == NO_FLAG || microshell.flag == MULTI)
+            i += microshell.len;
+        else
+            i += microshell.len + 1;
         free_agrs();
     }
 }
