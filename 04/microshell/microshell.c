@@ -8,7 +8,7 @@
 #include <signal.h>
 
 #define ARG_E "error: cd: bad arguments\n"
-#define CD_E "error: cd: cannot change directory to path_to_change\n"
+#define CD_E "error: cd: cannot change directory to "
 #define FAT_E "error: fatal\n"
 #define EXE_E "error: cannot execute "
 
@@ -32,9 +32,21 @@ typedef struct t_microshell
 t_microshell microshell;
 int fd[2];
 
+void  ft_bzero(void *s, int n)
+{
+    while (n)
+        ((unsigned char *)s)[--n] = 0;
+}
 int ft_strlen(char *s)
 {
+    // char *tmp;
+    // tmp = s;
+    // while (*tmp)
+    //     tmp++;
+    // return (tmp - s);
     int i= 0;
+    if (!s)
+        return (0);
     while (s[i])
         i++;
     return (i);
@@ -87,11 +99,7 @@ void  _exit_(char *msg1, char *msg2, int fd, int ret)
     exit(ret);
 }
 
-void  ft_bzero(void *s, int n)
-{
-    while (n)
-        ((unsigned char *)s)[n--] = 0;
-}
+
 
 void *ft_calloc(size_t count, size_t size)  //malloc 一段字符 初始化0
 {
@@ -107,10 +115,11 @@ char* ft_strdup(char *s)
 {
     char *tab;
     int i = 0;
-    i = ft_strlen(s);
     if (!s)
         return NULL;
-    tab = malloc(sizeof(char) * i + 1);
+    i = ft_strlen(s);
+    
+    tab = ft_calloc(i+1, sizeof(char));
     if (!tab)
         return NULL;
     i = 0;
@@ -119,7 +128,7 @@ char* ft_strdup(char *s)
         tab[i] = s[i];
         i++;
     }
-    tab[i] = '\0';
+    //tab[i] = '\0';
     return tab;
 }
 
@@ -130,7 +139,7 @@ void ft_cd (void)
         return;
     }
     if (chdir(microshell.args[1]) == -1) { //没有打开
-        print_msg(CD_E, NULL, STDERR_FILENO);
+        print_msg(CD_E, microshell.args[1], STDERR_FILENO);
         return;
     }
 }
@@ -138,24 +147,24 @@ void ft_cd (void)
 void  _parser(char **av, int i)  //i 表示 第几个 arg 。 这个函数保存microshell.args. （一个commande直到结束或者看见|;) 确认 falg; 
 {
     ft_bzero(&microshell, sizeof(t_microshell));
-    microshell.len = arg_len(av);
-    microshell.args = calloc(microshell.len + 1, sizeof(char *)); //malloc一个位置并且都赋予0
+    microshell.len = arg_len(av + i);
+    microshell.args = ft_calloc(microshell.len + 1, sizeof(char *)); //malloc一个位置并且都赋予0
     if (!microshell.args)
         _exit_(FAT_E, NULL, STDERR_FILENO, ERROR);
-    
+    int k = i;
     int j = 0;
-    while (j < microshell.len) //把一个arg 比如 “echo 1 3 4" 保存进args 直到遇到 ;或 |
+    while (av[k] && j < microshell.len) //把一个arg 比如 “echo 1 3 4" 保存进args 直到遇到 ;或 |
     {
-        microshell.args[j] = strdup(av[i]);
-        if(av[i] && ft_strlen(av[i]) == 1 && (av[i][0] == '|' || av[i][0] == ';'))
+        microshell.args[j] = ft_strdup(av[k]);
+        if(av[k] && ft_strlen(av[k]) == 1 && (av[k][0] == '|' || av[k][0] == ';'))
             break;
         j++;
-        i++;
+        k++;
     }
     
-    if (av[i] && (ft_strlen(av[i])== 1) && av[i][0] == '|')
+    if (av[k] && ft_strlen(av[k])== 1 && av[k][0] == '|')
         microshell.flag = PIPE;
-    else if (av[i] && ft_strlen(av[i]) == 1 && av[i][0] == ';' )
+    else if (av[k] && ft_strlen(av[k]) == 1 && av[k][0] == ';' )
         microshell.flag = MULTI;
     else
         microshell.flag = NO_FLAG;
@@ -178,7 +187,8 @@ void fork_exec(void)  //运行一个cmd
             _exit_(FAT_E, NULL, STDERR_FILENO, ERROR);
         else if (pid == 0) // 子进程负责write
         {
-            if (microshell.flag == PIPE) {
+            if (microshell.flag == PIPE) 
+            {
                 close(fd[0]);//关闭read管道
                 dup2(fd[1], STDOUT_FILENO); //write的东西放进fd[1] 
             } //【0】是 文件名
