@@ -151,20 +151,20 @@ void  _parser(char **av, int i)  //i 表示 第几个 arg 。 这个函数保存
     microshell.args = ft_calloc(microshell.len + 1, sizeof(char *)); //malloc一个位置并且都赋予0
     if (!microshell.args)
         _exit_(FAT_E, NULL, STDERR_FILENO, ERROR);
-    int k = i;
+    // int k = i;
     int j = 0;
-    while (av[k] && j < microshell.len) //把一个arg 比如 “echo 1 3 4" 保存进args 直到遇到 ;或 |
+    while (av[i] && j < microshell.len) //把一个arg 比如 “echo 1 3 4" 保存进args 直到遇到 ;或 |
     {
-        microshell.args[j] = ft_strdup(av[k]);
-        if(av[k] && ft_strlen(av[k]) == 1 && (av[k][0] == '|' || av[k][0] == ';'))
+        microshell.args[j] = ft_strdup(av[i]);
+        if(av[i] && ft_strlen(av[i]) == 1 && (av[i][0] == '|' || av[i][0] == ';'))
             break;
         j++;
-        k++;
+        i++;
     }
     
-    if (av[k] && ft_strlen(av[k])== 1 && av[k][0] == '|')
+    if (av[i] && ft_strlen(av[i])== 1 && av[i][0] == '|')
         microshell.flag = PIPE;
-    else if (av[k] && ft_strlen(av[k]) == 1 && av[k][0] == ';' )
+    else if (av[i] && ft_strlen(av[i]) == 1 && av[i][0] == ';' )
         microshell.flag = MULTI;
     else
         microshell.flag = NO_FLAG;
