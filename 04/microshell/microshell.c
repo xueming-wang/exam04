@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <signal.h>
+// #include <signal.h>
 
 #define ARG_E "error: cd: bad arguments\n"
 #define CD_E "error: cd: cannot change directory to "
@@ -20,7 +20,7 @@
 #define SUCCESS 0
 
 
-typedef struct t_microshell
+typedef struct s_microshell
 {
     int len;
     char **args;
@@ -156,7 +156,7 @@ void  _parser(char **av, int i)  //i 表示 第几个 arg 。 这个函数保存
     while (av[i] && j < microshell.len) //把一个arg 比如 “echo 1 3 4" 保存进args 直到遇到 ;或 |
     {
         microshell.args[j] = ft_strdup(av[i]);
-        if(av[i] && ft_strlen(av[i]) == 1 && (av[i][0] == '|' || av[i][0] == ';'))
+        if(av[i] && ft_strlen(av[i]) == 1 && (av[i][0] == '|' || av[i][0] == ';'))//遇到 | ；停止
             break;
         j++;
         i++;
@@ -185,12 +185,12 @@ void fork_exec(void)  //运行一个cmd
 
         if (pid < 0) //创建失败
             _exit_(FAT_E, NULL, STDERR_FILENO, ERROR);
-        else if (pid == 0) // 子进程负责write
+        else if (pid == 0) // 子进程负责write 再执行下一个命令
         {
             if (microshell.flag == PIPE) 
             {
                 close(fd[0]);//关闭read管道
-                dup2(fd[1], STDOUT_FILENO); //write的东西放进fd[1] 
+                dup2(fd[1], STDOUT_FILENO); //把结果的东西放进fd[1] 
             } //【0】是 文件名
             if(execve(microshell.args[0], microshell.args, microshell.env) == -1)//执行文件
                 _exit_(EXE_E, microshell.args[0], STDERR_FILENO, ERROR);
@@ -199,7 +199,7 @@ void fork_exec(void)  //运行一个cmd
         {
             if (microshell.flag == PIPE) {
                 close(fd[1]);//关闭write进程
-                dup2(fd[0], STDIN_FILENO); //标准输入(read)的东西放进fd【0】
+                dup2(fd[0], STDIN_FILENO); //标准输入(read)读到的东西放进fd【0】
             }
             waitpid(pid, NULL, 0);  //等待返回 父进程暂停
         }

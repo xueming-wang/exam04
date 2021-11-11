@@ -48,3 +48,18 @@ Ne fuitez pas de file descriptor!
 
 建议：
 不要泄露文件描述符！
+
+全局变量
+基础函数
+
+; #include
+; #define flag error msg
+printf msg
+free arg
+exit
+cd 
+paring  init len, init args init flag
+fork cd exec pid pipe
+execution un args i++: free 
+main
+
